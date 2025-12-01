@@ -1,0 +1,11 @@
+boto3
+pandas
+numpy
+scikit-learn
+sagemaker
+pyyaml
+joblib
+s3fs
+matplotlib
+seaborn
+shap
