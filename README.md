@@ -1,181 +1,290 @@
-# AWS MLOps End to End Project on AWS services
-    - Production-Ready Machine Learning Pipeline using AWS Native Service
-    - This project demonstrates a complete, production-grade MLOps system built entirely on AWS-native services, without DVC, Dagshub, MLFlow, or external platforms.
+# Project Objective:
 
-🧩 Architecture Overview
+Build a fully working, production-style MLOps pipeline on AWS
 
-- SageMaker Pipelines
-- SageMaker Processing Jobs
-- SageMaker Training Jobs
-- SageMaker Model Registry
-- SageMaker Real-Time Endpoints
-- S3 for all data + model storage
-- ECR for custom training & inference containers
-- Lambda for inference API wrapper
-- EventBridge Scheduler
-- CloudWatch Logs
-- CodePipeline + CodeBuild for CI/CD
-- IAM Roles (No tokens, no secrets exposed)
+Using:
 
+SageMaker Processing Jobs (ingest → preprocess → feature engineering)
 
-🏗 System Architecture Diagram
-- Data → Processing → Training → Evaluation → Registry → Deployment → Monitoring
+SageMaker Training Job (train model with your Docker container)
 
-                ┌──────────────────────┐
-                │     AWS S3 Bucket    │
-                │  Raw / Processed Data│
-                └─────────┬────────────┘
-                          │
-                 (1) Data Ingestion
-                          │
-                ┌─────────▼───────────┐
-                │SageMaker Processing │
-                │ Preprocessing / FE   │
-                └─────────┬───────────┘
-                          │
-                      (2) Training
-                          │
-                ┌─────────▼───────────┐
-                │ SageMaker Training  │
-                │   (SKLearn / PyTorch)│
-                └─────────┬───────────┘
-                          │
-                     (3) Evaluation
-                          │
-                ┌─────────▼───────────┐
-                │   Model Registry    │
-                │ Auto Versioning     │
-                └─────────┬───────────┘
-                          │
-                     (4) Deployment
-                          │
-                ┌─────────▼───────────┐
-                │Real-time Endpoint   │
-                └─────────┬───────────┘
-                          │
-                  (5) Monitoring
-                          │
-                ┌─────────▼───────────┐
-                │ CloudWatch + Monitor│
-                └─────────────────────┘
+SageMaker Processing Job (evaluate the model)
 
-🧪 Pipeline Stages
-- Data Ingestion (S3 → Processing Job)
-    ✔ Reads raw dataset
-    ✔ Writes to processing output
+Custom Docker container containing your entire project code
 
-- Data Preprocessing
-    ✔ Missing values
-    ✔ Normalization
-    ✔ Cleanup
+S3 storage for data, features, models, metrics
 
-- Feature Engineering
-    ✔ Feature extraction
-    ✔ Create ML-ready features
+CloudWatch logging for all steps
 
-- Training
-    ✔ Train model
-    ✔ Store artifacts in S3
+Clean project structure so you can maintain and scale easily
 
-- Evaluation
-    ✔ Calculate accuracy
-    ✔ Save metrics
+✔ Ensure the pipeline runs end-to-end automatically or step-by-step, with no manual fixes
 
-- Model Registration
-    ✔ Auto-version model
-    ✔ Store in Model Registry
+Meaning:
 
-- Conditional Deployment
-    ✔ If metrics meet threshold → deploy else → stop
+Each job should run with zero hardcoded paths
+
+Each step reads from S3 and writes back to the correct S3 folder
+
+The Docker container contains the right file structure for training/evaluation
+
+Logging is readable from CloudWatch
+
+Errors are minimal and easy to debug
 
 
+# Project Struxcture
 
-🎯 Project Goal: 
-Build a fully automated MLOps pipeline using only AWS services, where:
-
-- Data is stored in S3
-- Processing happens using SageMaker Processing Jobs
-- Training is executed using SageMaker Training Jobs
-- Model is versioned in SageMaker Model Registry
-- Pipelines orchestrate end-to-end ML workflow
-- Deployment creates a SageMaker Endpoint
-- CI/CD automatically updates models using CodePipeline
-
-
-
-
-
-🛠 AWS Services Used
-| Task                      | AWS Service Used                       |
-| ------------------------- | -------------------------------------- |
-| Data storage              | **Amazon S3**                          |
-| Automated preprocessing   | **SageMaker Processing Jobs**          |
-| Model training            | **SageMaker Training Jobs**            |
-| Feature engineering       | **SageMaker Processing Jobs**          |
-| Model evaluation          | **SageMaker Processing / Training**    |
-| Model registry            | **SageMaker Model Registry**           |
-| CI/CD for ML              | **SageMaker Pipelines + CodePipeline** |
-| Deployment (real-time)    | **SageMaker Endpoints**                |
-| Deployment (batch)        | **SageMaker Batch Transform**          |
-| Monitoring                | **SageMaker Model Monitor**            |
-| Logging                   | **CloudWatch Logs**                    |
-| Scheduling retraining     | **EventBridge Cron**                   |
-| Docker image hosting      | **Amazon ECR**                         |
-| IAM-based security        | **IAM Roles & Policies**               |
-| Serverless inference APIs | **AWS Lambda + API Gateway**           |
-
-Scripts:
-
-1. Ingestion
-
-✔ Reads data from s3://bucket/data/sourcedata/
-✔ Cleans, splits, writes to data/raw/
-✔ Logs → logs/data_ingestion/
-
-2. Preprocessing
-
-✔ Reads raw from S3
-✔ Cleans text → writes to data/processed/
-✔ Logs → logs/data_preprocessing/
-
-3. Feature Engineering
-
-✔ Loads processed
-✔ TF-IDF vectorization
-✔ Writes to data/features/
-✔ Logs → logs/feature_engineering/
-
-4. Model Training
-
-✔ Loads features
-✔ Trains Logistic Regression
-✔ Saves model → models/logreg_model.pkl
-✔ Saves train metrics → metrics/train_metrics.json
-✔ Logs → logs/model_train/
-
-5. Model Evaluation
-
-✔ Loads model using joblib
-✔ Loads test features
-✔ Computes eval metrics
-✔ Saves metrics → evaluation/eval_metrics.json
-✔ Logs → logs/model_evaluation/
+AWSSagemakerMLOps/
+│
+├── config/
+│   ├── __init__.py
+│   ├── params.yaml
+│
+├── logs/
+│   ├── data_ingestion/
+│   ├── data_preprocessing/
+│   ├── feature_engineering/
+│   ├── model_train/
+│   └── model_evaluation/
+│
+├── sm_jobs/
+│   ├── evaluation/
+│   │   ├── __init__.py
+│   │   └── eval_job.py
+│   │
+│   ├── pipelines/
+│   │   ├── __init__.py
+│   │   └── full_pipeline.py
+│   │
+│   ├── processing/
+│   │   ├── __init__.py
+│   │   ├── ingest_job.py
+│   │   ├── preprocess_job.py
+│   │   └── feature_eng_job.py
+│   │
+│   ├── training/
+│       ├── __init__.py
+│       └── train_job.py
+│
+├── scripts/
+│   ├── create_structure.py
+│   └── run_local_pipeline.py
+│
+├── src/
+│   ├── __init__.py
+│   │
+│   ├── data/
+│   │   ├── __init__.py
+│   │   ├── data_ingestion.py
+│   │   ├── data_preprocessing.py
+│   │   └── feature_engineering.py
+│   │
+│   ├── model/
+│       ├── __init__.py
+│       ├── model_train.py
+│       ├── model_evaluation.py
+│       └── model_predictor.py
+│
+├── utils/
+│   ├── __init__.py
+│   ├── logger.py
+│   ├── s3_utils.py
+│   ├── common.py
+│   └── config_loader.py
+│
+├── Dockerfile
+├── requirements.txt
+├── README.md
+└── entrypoint.py   (unused now)
 
 
+# S3 folder Structure:
 
-IAM Roles:
+aws-sagemaker-end2end-project/
+│
+├── data/
+│   ├── sourcedata/
+│   │     └── tweet_emotions.csv
+│   │
+│   ├── raw/
+│   │   ├── tweet_emotions_train.csv
+│   │   └── tweet_emotions_test.csv
+│   │
+│   ├── processed/
+│   │   ├── tweet_emotions_train.csv
+│   │   └── tweet_emotions_test.csv
+│   │
+│   └── features/
+│       ├── features_train.npz
+│       └── features_test.npz
+│
+├── models/
+│   ├── v1/
+│   │   └── logreg_model.pkl
+│   ├── v2/
+│   │   └── logreg_model.pkl
+│   └── logreg_model.pkl      ← latest model stored directly here
+│
+├── metrics/
+│   ├── v1/
+│   │   └── train_metrics.json
+│   ├── v2/
+│       └── train_metrics.json
+│   └── train_metrics.json    ← latest metrics
+│
+├── evaluation/
+│   ├── v1/
+│   │   ├── eval_metrics.json
+│   │   ├── classification_report.json
+│   │   └── confusion_matrix.png
+│   └── eval_metrics.json     ← latest evaluation
+│
+└── logs/
+    ├── data_ingestion/
+    ├── data_preprocessing/
+    ├── feature_engineering/
+    ├── model_train/
+    └── model_evaluation/
 
+Data flow steps per scripts:
+1️⃣ DATA INGESTION
+----------------------------------------
+Input:
+    S3 → data/sourcedata/tweet_emotions.csv
+
+Process:
+    - Clean text
+    - Split into train/test (80/20)
+
+Output:
+    S3 → data/raw/
+        ├── tweet_emotions_train.csv
+        └── tweet_emotions_test.csv
+
+
+2️⃣ DATA PREPROCESSING
+----------------------------------------
+Input:
+    S3 → data/raw/
+        ├── tweet_emotions_train.csv
+        └── tweet_emotions_test.csv
+
+Process:
+    - Basic cleaning
+    - Standardize columns
+
+Output:
+    S3 → data/processed/
+        ├── tweet_emotions_train.csv
+        └── tweet_emotions_test.csv
+
+
+3️⃣ FEATURE ENGINEERING
+----------------------------------------
+Input:
+    S3 → data/processed/
+        ├── tweet_emotions_train.csv
+        └── tweet_emotions_test.csv
+
+Process:
+    - TF-IDF vectorizer fit (train)
+    - Transform train & test
+    - Save sparse matrices (.npz)
+    - Save vectorizer.pkl
+
+Output:
+    S3 → data/features/
+        ├── features_train.npz
+        └── features_test.npz
+
+    S3 → artifacts/vectorizer/
+        └── tfidf_vectorizer.pkl
+
+
+4️⃣ MODEL TRAINING
+----------------------------------------
+Input:
+    S3 →
+        data/features/
+            ├── features_train.npz
+            └── features_test.npz
+        data/processed/
+            ├── tweet_emotions_train.csv  (for labels)
+            └── tweet_emotions_test.csv
+
+Process:
+    - Load TF-IDF vectors
+    - Train LogisticRegression
+    - Predict on test
+    - Produce metrics
+
+Output:
+    S3 → models/
+        └── logreg_model.pkl
+
+    S3 → metrics/
+        └── train_metrics.json
+
+
+5️⃣ MODEL EVALUATION
+----------------------------------------
+Input:
+    S3 →
+        models/logreg_model.pkl
+        data/features/features_test.npz
+        data/processed/tweet_emotions_test.csv
+
+Process:
+    - Evaluate model using held-out test data
+    - Compute accuracy, F1, classification report
+    - Generate confusion matrix plot
+
+Output:
+    S3 → evaluation/
+        ├── eval_metrics.json
+        ├── classification_report.json
+        └── confusion_matrix.png
+
+
+sagemaker-pipeline-mlops-end2end/
+│
+├── pipelines/
+│   ├── full-pipeline/
+│   │     ├── code/
+│   │     │    └── full_pipeline.py
+│   │     ├── execution/
+│   │     ├── cache/
+│   │     └── artifacts/
+│
+├── processing/
+│   ├── ingest/
+│   │     └── step artifacts
+│   ├── preprocess/
+│   │     └── step artifacts
+│   └── feature_eng/
+│         └── step artifacts
+│
+├── training/
+│   ├── model/
+│   │     └── step artifacts (temporary)
+│   └── metrics/
+│         └── training metrics from estimator
+│
+├── evaluation/
+│   └── step artifacts (temporary)  
+│
+├── models/
+│   ├── model.tar.gz   (SageMaker model registry)
+│   └── approved/
+│         └── production models
+│
+└── pipeline_logs/
+      └── CloudWatch-linked logs for pipeline executions
+
+
+AWS IAM roles:
 SageMakerExecutionRole
-
-Attach these AWS managed policies:
-
-    AmazonSageMakerFullAccess
-
-    AmazonS3FullAccess
-
-    AmazonEC2ContainerRegistryFullAccess
-
-    CloudWatchLogsFullAccess
-
-
 SageMakerPipelineRole
+
+ECR Repo ARN: 975248345240.dkr.ecr.us-east-1.amazonaws.com/mlops/mlmodels:latest

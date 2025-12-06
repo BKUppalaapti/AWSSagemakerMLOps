@@ -1,0 +1,46 @@
+project:
+  name: aws-mlops-end2end
+  region: us-east-1
+
+aws:
+  execution_role_arn: "arn:aws:iam::975248345240:role/SageMakerExecutionRole"
+  pipeline_role_arn: "arn:aws:iam::975248345240:role/SageMakerPipelineRole"
+
+buckets:
+  data: "aws-sagemaker-end2end-project"
+  pipeline: "sagemaker-pipeline-mlops-end2end"
+
+paths:
+  data:
+    source_csv: "data/sourcedata/tweet_emotions.csv"
+    source_prefix: "data/sourcedata/"
+    raw_prefix: "data/raw/"
+    processed_prefix: "data/processed/"
+    features_prefix: "data/features/"
+
+  artifacts:
+    vectorizer_prefix: "artifacts/vectorizer/"
+    models_prefix: "models/"
+    metrics_prefix: "metrics/"
+    evaluation_prefix: "evaluation/"
+    logs_prefix: "logs/"
+
+features:
+  train_filename: "tweet_emotions_train.csv"
+  test_filename: "tweet_emotions_test.csv"
+
+
+model:
+  name: "logreg_model.pkl"
+  version_default: 1
+
+sagemaker:
+  pipeline_name: "aws-mlops-end2end-pipeline"
+  image_uri: "975248345240.dkr.ecr.us-east-1.amazonaws.com/mlops/mlmodels:latest"
+  training_instance_type: "ml.m5.large"
+  training_instance_count: 1
+  processing_instance_type: "ml.t3.medium"
+  processing_instance_count: 1
+
+logging:
+  log_bucket_key: "data"
